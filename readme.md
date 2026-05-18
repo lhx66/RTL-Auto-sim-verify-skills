@@ -84,6 +84,7 @@ claude
 直接在对话框中发出一句明确的激活指令，并将你的 `.v` 源码文件提供给它：
 
 > **指令**：**使用/rtl-verify来启动本skill**
+
 > **提示词示例**：“我上传了 core.v 和 sub_module.v 文件，请启动 `RTL Verification Orchestrator` 对其进行全自动仿真验证。”
 
 ### 第三步：配合 AI 进行意图对齐 (关键)
