@@ -45,7 +45,7 @@
 
 ---
 
-## 🚀 安装方法 (Installation)
+## 安装方法 (Installation)
 
 我们在项目根目录下提供了一个全自动的远程部署脚本 `install_skills.sh`。它可以直接在你的任意 RTL 工程中一键运行，自动从本 Git 仓库拉取最新skill，并分发部署到你常用的 AI 工具(claude code\cursor\codex\Goose\Gemini CLI)配置中。
 
@@ -68,7 +68,7 @@ curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/ma
 
 ---
 
-## 📖 使用说明 (Usage Instructions)
+## 使用说明 (Usage Instructions)
 
 环境部署完成后，你可以通过以下极其简单的四步体验全自动硬件设计验证闭环：
 
