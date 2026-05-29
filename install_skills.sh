@@ -15,7 +15,7 @@ set -eu
 # ---------------------------------------------------------------------------
 # 常量定义
 # ---------------------------------------------------------------------------
-REPO_URL="https://github.com/lhx66/RTL-Auto-sim-verify-skills.git"
+REPO_URL="${RTL_VERIFY_REPO_URL:-https://github.com/lhx66/RTL-Auto-sim-verify-skills.git}"
 SKILL_NAME="rtl-verification-copilot"
 CANONICAL_DIR="$HOME/.agents/skills/$SKILL_NAME"
 
@@ -105,7 +105,10 @@ main() {
     # 1. 拉取核心代码库
     if [ -d "$CANONICAL_DIR/.git" ]; then
         info "正在从远程同步最新 Skill 代码..."
-        cd "$CANONICAL_DIR" && git pull --ff-only 2>/dev/null || true
+        cd "$CANONICAL_DIR"
+        git remote set-url origin "$REPO_URL"
+        git fetch origin main
+        git reset --hard origin/main
     else
         info "正在将远程 Skill 仓库克隆到全局目录: $CANONICAL_DIR"
         mkdir -p "$(dirname "$CANONICAL_DIR")"
