@@ -116,16 +116,10 @@ main() {
         git clone "$REPO_URL" "$CANONICAL_DIR"
     fi
 
-    # 2. 写入 Claude Code 插件配置
-    info "正在配置 Agent 插件元数据..."
-    cat > "$CANONICAL_DIR/skills/marketplace.json" << EOF
-{
-  "name": "RTL-Verification-Copilot",
-  "version": "1.0.0",
-  "description": "Log-Driven RTL Verification and Auto-Refactoring Multi-Agent System",
-  "entrypoint": "Master_Skill_RTL_Copilot.md"
-}
-EOF
+    # 2. 生成标准 Skill 入口，并清理旧版非标准入口
+    cp "$CANONICAL_DIR/skills/SKILL.template.md" "$CANONICAL_DIR/skills/SKILL.md"
+    info "正在清理旧版 Agent 插件元数据..."
+    rm -f "$CANONICAL_DIR/skills/marketplace.json"
     success "Skill 核心文件部署成功。"
 
     # =======================================================================
