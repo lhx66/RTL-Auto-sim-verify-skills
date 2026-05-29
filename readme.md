@@ -1,111 +1,198 @@
-### RTL-Auto-sim-verify-skills
+# RTL-Auto-sim-verify-skills
 
-> **基于日志驱动验证 (Log-Driven Verification) 范式的全自动 RTL 验证与自动修复智能体技能库**
+## Quick Navigation
 
-本工程是一套专门为具备终端执行与文件读写能力的 AI Agent（如 **Claude Code**, **Codex**, **Cursor** 等）量身打造的数字 IC 自动验证方案，旨在将 AI 强大的文本逻辑推理能力与 Testbench 动态日志相结合，构筑起一个**【代码分析 -> 智能断言 TB 构建 -> 静默仿真运行 -> 日志自检挖掘 -> 外科手术式代码修复 -> 回归测试】**的无限自驱动闭环代码功能修复。
-本工程的目的在于便于工程师在非大型项目中解放双手，由agent在后台静默完成代码功能的修复与验证。目前修复代码的能力还不够完善，取决于接入的大模型能力。在进行代码多次迭代修改前，**请务必确认好AI总结的代码实现意图是否正确**。
-
-**重要说明**：当前版本**暂时仅支持 ModelSim 仿真器**（要求系统环境变量中已配置好 `vsim` 命令行工具）。
+- [English](#english)
+- [中文](#中文)
 
 ---
 
-## 项目架构 (Project Architecture)
+## English
 
-项目采用**多智能体协作 / 多阶段流水线**的分层架构，核心功能由放置在 `skills/` 文件夹下的 Markdown 技能文档（System Prompt）进行定义与约束。项目架构如下：
-```
-├── README.md                     # 本说明文档
-├── install_skills.sh             # 一键远端/本地环境部署脚本
-└── skills/
-    ├── SKILL.md                        # 中央大脑：统筹全局验证闭环与身份切换
-    ├── Skill_1_RTL_Analyzer.md         # Phase 1：架构分析、意图对齐与强自检型 TB 自动插桩构建
-    ├── Skill_2_Simulation_Controller.md# Phase 2：仿真环境搭建、增量脚本管理、后台静默运行与日志精读
-    └── Skill_3_RTL_Refactor.md         # Phase 3：缺陷精准溯源、代码/TB 外科手术式覆写、回归测试触发
+> **An autonomous RTL verification and auto-repair skill based on log-driven verification.**
+
+This skill is designed for AI agents with terminal execution and file editing capabilities, such as **Claude Code**, **Codex**, and **Cursor**. It combines the agent's reasoning ability with dynamic testbench logs to build a self-driven RTL verification loop:
+
+```text
+code analysis -> assertion-aware testbench generation -> silent simulation -> log mining -> focused code repair -> regression
 ```
 
-### 1. 中央统筹大脑 (`SKILL.md`)
+Workflow characteristics:
 
-作为整个验证闭环的控制核心。它负责在不同阶段动态切换 AI 的角色，监控整个闭环是否收敛。只有当仿真日志中明确打印出 `[TB_INFO] Simulation Finished!` 且全程未触发任何 `Error` 时，才会判定验证成功并结束验证流程。
+1. Help engineers reduce manual effort during RTL module or project verification by letting the agent run verification and repair loops in the background.
+2. Repair quality depends on the model and tool environment connected to the agent.
+3. Before allowing multiple automated code-repair iterations, carefully confirm that the agent's inferred design intent is correct.
 
-### 2. 源码分析与强自检 TB 构筑 (`Skill_1_RTL_Analyzer.md`)
+**Important:** The current version only supports the **ModelSim** simulator. The `vsim` command-line tool must be available in the system environment.
 
-* **层级倒推**：自动分析用户上传的一批 `.v` 或 `.sv` 文件，通过例化关系倒推模块依赖树，精准定位 Top Module。
-* **意图硬死磕**：引入**强制交互迭代机制**，推断设计意图并强制用户确认，直到理解完全一致后才放行。
-* **自检插桩**：在生成的 Testbench 中注入带有 `[TB_MONITOR]`、`[TB_DATA]`、`[TB_ERROR]` 统一标签的定向测试用例（SVA 断言及高密度文本打印），让 Testbench 自己汇报时序。
+## Project Architecture
 
-### 3. 环境统筹与日志自动挖掘 (`Skill_2_Simulation_Controller.md`)
+The project uses a multi-phase skill pipeline. The core behavior is defined by Markdown skill files under the `skills/` directory:
 
-* **路径溯源与幂等性**：强制将仿真环境规范化收拢在工程根目录的 `./tb_script/` 文件夹下。在 `.f` 文件中自动回溯正确的相对路径，且绝不重复生成带后缀的垃圾脚本文件。
-* **静默后台运行**：在 `.do` 和 `.bat` 脚本中强挂 `-c` 等静默参数，完全在命令行模式下运行仿真，绝不弹窗打扰用户前台浏览。
-* **日志全自动提取**：全自动精读 `vlog.log` 和 `vsim.log`，提取报错时间点与状态转移切片，拒绝把长篇日志抛给人类肉眼看。
+```text
+README.md
+install_skills.sh
+skills/
+  SKILL.md                         # Main orchestrator for the full verification loop
+  Skill_1_RTL_Analyzer.md          # Phase 1: architecture analysis, intent alignment, and self-checking testbench generation
+  Skill_2_Simulation_Controller.md # Phase 2: ModelSim script generation, silent execution, and log analysis
+  Skill_3_RTL_Refactor.md          # Phase 3: defect tracing, focused RTL/testbench edits, and regression triggering
+  agents/openai.yaml               # Codex UI metadata
+```
 
-### 4. 代码重构与修复流程 (`Skill_3_RTL_Refactor.md`)
+### 1. Main Orchestrator (`SKILL.md`)
 
-* **先定因，再开刀**：根据日志时间戳向前追溯一拍或几拍，定位是 RTL 逻辑缺陷、状态机死锁还是 TB 误报。
-* **外科手术式修复**：利用 Agent 的文件覆写能力，精准局部替换缺陷代码（Diff），不破坏其余完好逻辑。随后**自动重新触发 `./tb_script/sim.bat**` 开启新一轮验证。
+Controls the full verification loop and switches between phases. The loop succeeds only when the simulation log prints `[TB_INFO] Simulation Finished!` and the full run contains no `Error`.
 
----
+### 2. RTL Analysis and Self-Checking Testbench Generation (`Skill_1_RTL_Analyzer.md`)
 
-## 安装方法 (Installation)
+- **Hierarchy inference:** Analyze `.v` and `.sv` files, infer the module dependency tree, and identify the top module.
+- **Intent alignment:** Require the user to confirm the inferred design intent before generating assertions or test scenarios.
+- **Self-checking instrumentation:** Generate testbench logic with `[TB_MONITOR]`, `[TB_DATA]`, and `[TB_ERROR]` labels, SVA assertions, and dense text logs.
 
-我们在项目根目录下提供了一个全自动的远程部署脚本 `install_skills.sh`。它可以直接在你的任意 RTL 工程中一键运行，自动从本 Git 仓库拉取最新skill，并分发部署到你常用的 AI 工具(claude code\cursor\codex\Goose\Gemini CLI)配置中。
+### 3. Simulation Control and Log Mining (`Skill_2_Simulation_Controller.md`)
 
-### 1. 自动远程下载并安装
+- **Path discipline and idempotence:** Keep simulation scripts under `./tb_script/` and use correct relative paths in filelists.
+- **Silent background execution:** Run ModelSim in command-line mode with scripts such as `.do` and `.bat`.
+- **Automated log extraction:** Read `vlog.log` and `vsim.log`, extract failing timestamps, state transitions, and assertion context.
 
-打开终端(windows环境可使用git bash)执行以下命令：
+### 4. RTL Refactor and Repair (`Skill_3_RTL_Refactor.md`)
+
+- **Root cause before edits:** Trace one or more cycles back from the failing log timestamp to decide whether the issue is an RTL bug, FSM deadlock, or testbench false alarm.
+- **Focused repair:** Apply small, local diffs without damaging unrelated logic, then rerun `./tb_script/sim.bat` for regression.
+
+## Installation
+
+Run the installer from any terminal. On Windows, Git Bash is recommended.
 
 ```bash
-# 下载远程安装脚本
 curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | sh
 ```
 
-### 2. 脚本自动适配的环境
+The installer distributes the skill to detected AI environments:
 
-脚本在运行时会全自动为你初始化以下 AI 环境的技能池：
+- **Claude Code:** `.claude/skills/rtl-verification-copilot/`
+- **Cursor Rules:** `.cursor/rules/rtl-verification-copilot/`
+- **Codex:** `.codex/skills/rtl-verification-copilot/`
+- **Gemini CLI / Goose:** installed when their standard config directories are detected
 
-* **Claude Code**：自动分发至 `.claude/skills/rtl-verification-copilot/` 标准技能目录。
-* **Cursor Rules**：自动分发至 `.cursor/rules/` 目录，Cursor 引擎会自动将其作为最高优先级的本地行为守则。
-* **Codex System**：自动分发至 `.codex/skills/rtl-verification-copilot/` 标准技能目录。
+## Usage
 
----
-
-## 使用说明 (Usage Instructions)
-
-环境部署完成后，你可以通过以下极其简单的四步体验全自动硬件设计验证闭环：
-
-### 第一步：启动 AI Agent
-
-在工程根目录下唤醒你支持本地操作的 AI 工具，例如启动 Claude Code：
+1. Provide existing RTL code, or use another skill to generate RTL code.
+2. Open an AI agent with local file and terminal access from the RTL project root, for example:
 
 ```bash
 claude
 ```
 
-### 第二步：唤醒验证统筹引擎
+3. Ask the agent to use `/rtl-verify` or invoke the skill by name.
+4. Confirm the detected top module, hierarchy, design intent, and critical signals.
+5. Let the agent generate a self-checking testbench, run ModelSim, analyze logs, repair focused issues, and rerun regression until the loop converges.
 
-> **指令**：**使用/rtl-verify来启动本skill**
+## Roadmap
 
+1. Important-version reporting.
+2. Analysis based on VCD or other waveform files.
+3. The installer has currently been verified with Codex and Claude Code; other tools still need validation.
 
-### 第三步：配合 AI 进行意图对齐 (关键)
+## Contact
 
-AI 会首先解析出顶层模块与子模块树。随后，它会停留并强制向你提问。
+```email
+1501566255@qq.com
+```
 
-* 请在这里准确回复它的问题。例如告诉它：“*正确，这是一个带流水线的16位乘加器，我最关心在输入有效数据突发（valid连续拉高）时，输出在 3 拍后是否能准确打出数据，且不发生溢出截断。*”
-* 当你回复“*确认，完全正确*”后，验证引擎开启。
+---
 
-### 第四步：进入无人值守的验证修复流程
+## 中文
 
-此时，你可以双手离开键盘。AI 将自动执行以下全自动化链条：
+> **基于日志驱动验证 (Log-Driven Verification) 的全自动 RTL 验证与自动修复 SKILL。**
 
-1. 为你生成内嵌定向边界激励与 SystemVerilog 断言（SVA）的高自检性 Testbench。
-2. 自动在 `./tb_script/` 目录下生成 ModelSim 命令行运行脚本。
-3. 在后台静默跑起 `vsim` 仿真，并在完毕后自动精读日志。
-4. 如果断言在 150ns 时报错 `[TB_ERROR]`，它会提取该时刻的状态转换日志，并自动修改源码中对应 always 块的控制条件。
-5. 修改完成后，它会再次自动在后台跑仿真，直到没有任何 Error，完美打印出 `[TB_INFO] Simulation Finished!`。
+本 skill 是一套专门为具备终端执行与文件读写能力的 AI Agent（如 **Claude Code**, **Codex**, **Cursor** 等）打造的数字 IC 自动验证方案。它将 AI 的文本逻辑推理能力与 Testbench 动态日志相结合，构筑起一个自驱动闭环：
 
-验证彻底收敛后，AI 会向你提交最终的战报以及一份被“精准修复”好的、完好无损的 RTL 源码文件。
+```text
+代码分析 -> 智能断言 TB 构建 -> 静默仿真运行 -> 日志自检挖掘 -> 外科手术式代码修复 -> 回归测试
+```
 
+本 skill 的工作流特征如下：
+
+1. 在 RTL 项目或模块功能验证中帮助工程师减少手动工作，由 agent 在后台完成代码功能修复与验证。
+2. 当前修复代码的能力取决于接入的大模型能力。
+3. 在进行多次自动迭代修改前，**请务必确认 AI 总结的代码实现意图是否正确**。
+
+**重要说明**：当前版本**暂时仅支持 ModelSim 仿真器**，要求系统环境变量中已配置好 `vsim` 命令行工具。
+
+## 项目架构
+
+项目采用多阶段流水线架构，核心功能由 `skills/` 文件夹下的 Markdown 技能文档定义：
+
+```text
+README.md
+install_skills.sh
+skills/
+  SKILL.md                         # 中央大脑：统筹全局验证闭环与身份切换
+  Skill_1_RTL_Analyzer.md          # Phase 1：架构分析、意图对齐与强自检型 TB 自动构建
+  Skill_2_Simulation_Controller.md # Phase 2：仿真环境搭建、静默运行与日志精读
+  Skill_3_RTL_Refactor.md          # Phase 3：缺陷溯源、代码/TB 精准修复、回归测试触发
+  agents/openai.yaml               # Codex 界面元数据
+```
+
+### 1. 中央统筹大脑 (`SKILL.md`)
+
+作为整个验证闭环的控制核心。它负责在不同阶段动态切换 AI 的角色，监控整个闭环是否收敛。只有当仿真日志中明确打印 `[TB_INFO] Simulation Finished!` 且全程未触发任何 `Error` 时，才判定验证成功。
+
+### 2. 源码分析与强自检 TB 构筑 (`Skill_1_RTL_Analyzer.md`)
+
+- **层级倒推**：自动分析 `.v` 或 `.sv` 文件，通过例化关系倒推模块依赖树，定位 Top Module。
+- **意图确认**：引入强制交互机制，推断设计意图并要求用户确认，直到理解完全一致后再进入下一步。
+- **自检插桩**：在 Testbench 中注入 `[TB_MONITOR]`、`[TB_DATA]`、`[TB_ERROR]` 标签、SVA 断言和高密度文本打印。
+
+### 3. 环境统筹与日志自动挖掘 (`Skill_2_Simulation_Controller.md`)
+
+- **路径溯源与幂等性**：强制将仿真环境收拢到工程根目录的 `./tb_script/` 文件夹下，并在 `.f` 文件中使用正确相对路径。
+- **静默后台运行**：通过 `.do` 和 `.bat` 脚本在命令行模式下运行 ModelSim。
+- **日志自动提取**：自动精读 `vlog.log` 和 `vsim.log`，提取报错时间点、状态转移切片和断言上下文。
+
+### 4. 代码重构与修复流程 (`Skill_3_RTL_Refactor.md`)
+
+- **先定因，再开刀**：根据日志时间戳向前追溯一拍或几拍，定位是 RTL 逻辑缺陷、状态机死锁还是 TB 误报。
+- **外科手术式修复**：利用 Agent 的文件编辑能力，精准局部替换缺陷代码，不破坏其余逻辑。随后自动重新触发 `./tb_script/sim.bat` 开启新一轮验证。
+
+## 安装方法
+
+在终端中执行以下命令。Windows 环境建议使用 Git Bash。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | sh
+```
+
+安装脚本会自动分发到检测到的 AI 环境：
+
+- **Claude Code**：`.claude/skills/rtl-verification-copilot/`
+- **Cursor Rules**：`.cursor/rules/rtl-verification-copilot/`
+- **Codex**：`.codex/skills/rtl-verification-copilot/`
+- **Gemini CLI / Goose**：检测到对应标准配置目录时自动安装
+
+## 使用说明
+
+1. 用户提供已有 RTL 代码，或配合其它 skill 生成代码。
+2. 在 RTL 工程根目录下启动具备本地文件和终端权限的 AI 工具，例如：
+
+```bash
+claude
+```
+
+3. 使用 `/rtl-verify` 或直接要求 agent 使用本 skill。
+4. 配合 AI 确认顶层模块、模块层级、设计意图和关键监控信号。
+5. 让 agent 自动生成自检 Testbench、运行 ModelSim、分析日志、精准修复问题并重复回归，直到验证闭环收敛。
 
 ## 待开发
 
-1. 自动备份重要版本
-2. 基于仿真波形文件VCD等的结果分析
+1. 重要版本汇报。
+2. 基于 VCD 等仿真波形文件的结果分析。
+3. 目前仅验证了 Codex 与 Claude Code 的安装，其它工具待验证。
+
+## 联系方式
+
+```email
+1501566255@qq.com
+```
