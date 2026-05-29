@@ -116,8 +116,7 @@ main() {
         git clone "$REPO_URL" "$CANONICAL_DIR"
     fi
 
-    # 2. 生成标准 Skill 入口，并清理旧版非标准入口
-    cp "$CANONICAL_DIR/skills/SKILL.template.md" "$CANONICAL_DIR/skills/SKILL.md"
+    # 2. 清理旧版非标准入口，避免 Codex 同时显示 marketplace 与 SKILL.md 两个入口
     info "正在清理旧版 Agent 插件元数据..."
     rm -f "$CANONICAL_DIR/skills/marketplace.json"
     success "Skill 核心文件部署成功。"
@@ -133,7 +132,7 @@ main() {
 description: 启动 RTL Verification Orchestrator 全自动验证飞轮
 ---
 
-请先读取并严格遵循 \`~/.agents/skills/rtl-verification-copilot/skills/Master_Skill_RTL_Copilot.md\` 中的统筹引擎守则。
+请先读取并严格遵循 \`~/.agents/skills/rtl-verification-copilot/skills/SKILL.md\` 中的统筹引擎守则。
 
 然后，接管当前目录下的代码 \$ARGUMENTS，启动全自动 RTL 验证飞轮。
 开始前，请先帮我梳理当前工程的顶层模块结构，并向我强制确认设计意图。

@@ -16,13 +16,13 @@
 ├── README.md                     # 本说明文档
 ├── install_skills.sh             # 一键远端/本地环境部署脚本
 └── skills/
-    ├── Master_Skill_RTL_Copilot.md     # 中央大脑：统筹全局验证闭环与身份切换
+    ├── SKILL.md                        # 中央大脑：统筹全局验证闭环与身份切换
     ├── Skill_1_RTL_Analyzer.md         # Phase 1：架构分析、意图对齐与强自检型 TB 自动插桩构建
     ├── Skill_2_Simulation_Controller.md# Phase 2：仿真环境搭建、增量脚本管理、后台静默运行与日志精读
     └── Skill_3_RTL_Refactor.md         # Phase 3：缺陷精准溯源、代码/TB 外科手术式覆写、回归测试触发
 ```
 
-### 1. 中央统筹大脑 (`Master_Skill_RTL_Copilot.md`)
+### 1. 中央统筹大脑 (`SKILL.md`)
 
 作为整个验证闭环的控制核心。它负责在不同阶段动态切换 AI 的角色，监控整个闭环是否收敛。只有当仿真日志中明确打印出 `[TB_INFO] Simulation Finished!` 且全程未触发任何 `Error` 时，才会判定验证成功并结束验证流程。
 
@@ -62,9 +62,9 @@ curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/ma
 
 脚本在运行时会全自动为你初始化以下 AI 环境的技能池：
 
-* **Claude Code**：自动分发至 `.claude-plugin/rtl-copilot/` 目录并生成标准插件元数据 `marketplace.json`。
+* **Claude Code**：自动分发至 `.claude/skills/rtl-verification-copilot/` 标准技能目录。
 * **Cursor Rules**：自动分发至 `.cursor/rules/` 目录，Cursor 引擎会自动将其作为最高优先级的本地行为守则。
-* **Codex System**：自动分发至 `.codex/skills/` 目录并生成对应的技能组描述文件 `codex_config.json`。
+* **Codex System**：自动分发至 `.codex/skills/rtl-verification-copilot/` 标准技能目录。
 
 ---
 
