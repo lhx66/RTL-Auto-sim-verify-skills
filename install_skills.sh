@@ -43,7 +43,7 @@ detect_global_platforms() {
     platforms=""
     if [ -d "$HOME/.claude" ]; then platforms="$platforms claude-code"; fi
     if [ -d "$HOME/.gemini" ]; then platforms="$platforms gemini"; fi
-    if [ -d "$HOME/.codex" ]; then platforms="$platforms codex"; fi
+    if [ -n "${CODEX_HOME:-}" ] || [ -d "$HOME/.codex" ]; then platforms="$platforms codex"; fi
     if [ -d "$HOME/.cursor" ]; then platforms="$platforms cursor"; fi
     if [ -d "$HOME/.config/goose" ]; then platforms="$platforms goose"; fi
     echo "$platforms"
@@ -56,7 +56,7 @@ platform_path() {
     case "$1" in
         claude-code) echo "$HOME/.claude/skills/$SKILL_NAME" ;;
         gemini)      echo "$HOME/.gemini/skills/$SKILL_NAME" ;;
-        codex)       echo "$HOME/.codex/skills/$SKILL_NAME" ;;
+        codex)       echo "${CODEX_HOME:-$HOME/.codex}/skills/$SKILL_NAME" ;;
         cursor)      echo "$HOME/.cursor/rules/$SKILL_NAME" ;;
         goose)       echo "$HOME/.config/goose/skills/$SKILL_NAME" ;;
     esac
