@@ -71,9 +71,9 @@ curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/ma
 
 The installer distributes the skill to detected AI environments:
 
-- **Claude Code:** `.claude/skills/rtl-verification-copilot/`
-- **Cursor Rules:** `.cursor/rules/rtl-verification-copilot/`
-- **Codex:** `.codex/skills/rtl-verification-copilot/`
+- **Claude Code:** `.claude/skills/rtl-verify/`
+- **Cursor Rules:** `.cursor/rules/rtl-verify/`
+- **Codex:** `.codex/skills/rtl-verify/`
 - **Gemini CLI / Goose:** installed when their standard config directories are detected
 
 ## Usage
@@ -167,9 +167,9 @@ curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/ma
 
 安装脚本会自动分发到检测到的 AI 环境：
 
-- **Claude Code**：`.claude/skills/rtl-verification-copilot/`
-- **Cursor Rules**：`.cursor/rules/rtl-verification-copilot/`
-- **Codex**：`.codex/skills/rtl-verification-copilot/`
+- **Claude Code**：`.claude/skills/rtl-verify/`
+- **Cursor Rules**：`.cursor/rules/rtl-verify/`
+- **Codex**：`.codex/skills/rtl-verify/`
 - **Gemini CLI / Goose**：检测到对应标准配置目录时自动安装
 
 ## 使用说明

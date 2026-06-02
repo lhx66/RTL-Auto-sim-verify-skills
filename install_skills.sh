@@ -6,7 +6,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | sh
 #
 # 功能:
-#   1. 将远程仓库克隆/更新至全局统一存放路径 ~/.agents/skills/rtl-verification-copilot
+#   1. 将远程仓库克隆/更新至全局统一存放路径 ~/.agents/skills/rtl-verify
 #   2. 自动建立软链接分发到各全局 AI 平台（Claude Code, Codex, Cursor 等）
 #   3. 自动在 Claude Code 中注册原生的 /rtl-verify 斜杠命令
 
@@ -16,8 +16,10 @@ set -eu
 # 常量定义
 # ---------------------------------------------------------------------------
 REPO_URL="${RTL_VERIFY_REPO_URL:-https://github.com/lhx66/RTL-Auto-sim-verify-skills.git}"
-SKILL_NAME="rtl-verification-copilot"
+SKILL_NAME="rtl-verify"
+LEGACY_SKILL_NAME="rtl-verification-copilot"
 CANONICAL_DIR="$HOME/.agents/skills/$SKILL_NAME"
+LEGACY_CANONICAL_DIR="$HOME/.agents/skills/$LEGACY_SKILL_NAME"
 
 # ---------------------------------------------------------------------------
 # 终端颜色输出
@@ -59,6 +61,16 @@ platform_path() {
         codex)       echo "${CODEX_HOME:-$HOME/.codex}/skills/$SKILL_NAME" ;;
         cursor)      echo "$HOME/.cursor/rules/$SKILL_NAME" ;;
         goose)       echo "$HOME/.config/goose/skills/$SKILL_NAME" ;;
+    esac
+}
+
+legacy_platform_path() {
+    case "$1" in
+        claude-code) echo "$HOME/.claude/skills/$LEGACY_SKILL_NAME" ;;
+        gemini)      echo "$HOME/.gemini/skills/$LEGACY_SKILL_NAME" ;;
+        codex)       echo "${CODEX_HOME:-$HOME/.codex}/skills/$LEGACY_SKILL_NAME" ;;
+        cursor)      echo "$HOME/.cursor/rules/$LEGACY_SKILL_NAME" ;;
+        goose)       echo "$HOME/.config/goose/skills/$LEGACY_SKILL_NAME" ;;
     esac
 }
 
@@ -116,6 +128,11 @@ main() {
         git clone "$REPO_URL" "$CANONICAL_DIR"
     fi
 
+    if [ "$LEGACY_CANONICAL_DIR" != "$CANONICAL_DIR" ] && { [ -e "$LEGACY_CANONICAL_DIR" ] || [ -L "$LEGACY_CANONICAL_DIR" ]; }; then
+        info "正在清理旧版全局缓存: $LEGACY_CANONICAL_DIR"
+        rm -rf "$LEGACY_CANONICAL_DIR"
+    fi
+
     # 2. 清理旧版非标准入口，避免 Codex 同时显示 marketplace 与 SKILL.md 两个入口
     info "正在清理旧版 Agent 插件元数据..."
     rm -f "$CANONICAL_DIR/skills/marketplace.json"
@@ -132,7 +149,7 @@ main() {
 description: 启动 RTL Verification Orchestrator 全自动验证飞轮
 ---
 
-请先读取并严格遵循 \`~/.agents/skills/rtl-verification-copilot/skills/SKILL.md\` 中的统筹引擎守则。
+请先读取并严格遵循 \`~/.agents/skills/rtl-verify/skills/SKILL.md\` 中的统筹引擎守则。
 
 然后，接管当前目录下的代码 \$ARGUMENTS，启动全自动 RTL 验证飞轮。
 开始前，请先帮我梳理当前工程的顶层模块结构，并向我强制确认设计意图。
@@ -149,6 +166,11 @@ EOF
 
     for platform in $platforms; do
         dest="$(platform_path "$platform")"
+        legacy_dest="$(legacy_platform_path "$platform")"
+        if [ "$legacy_dest" != "$dest" ] && { [ -e "$legacy_dest" ] || [ -L "$legacy_dest" ]; }; then
+            rm -rf "$legacy_dest"
+            success "已清理旧版入口: $legacy_dest"
+        fi
         create_symlink "$TARGET_SKILLS_DIR" "$dest"
         name="$(platform_display "$platform")"
         success "已成功分发软链接至 $name → $dest"

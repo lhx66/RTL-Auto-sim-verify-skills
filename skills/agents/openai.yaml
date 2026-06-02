@@ -1,7 +1,7 @@
 interface:
   display_name: "RTL Verification Copilot"
   short_description: "ModelSim-driven RTL verification and repair workflow"
-  default_prompt: "Use $rtl-verification-copilot to verify my Verilog/SystemVerilog RTL with ModelSim and iterate from simulation logs."
+  default_prompt: "Use $rtl-verify to verify my Verilog/SystemVerilog RTL with ModelSim and iterate from simulation logs."
 
 policy:
   allow_implicit_invocation: true
