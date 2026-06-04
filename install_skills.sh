@@ -9,7 +9,7 @@
 #   1. 将远程仓库克隆/更新至全局统一存放路径 ~/.agents/skills/rtl-verify
 #   2. 自动建立软链接分发到各全局 AI 平台（Claude Code, Codex, Cursor 等）
 #   3. 自动在 Claude Code 中注册原生的 /rtl-verify 斜杠命令
-#   4. 安装时可选择中文或英文 skill 版本
+#   4. 安装时询问中文或英文版本，并复制到统一的 skills/ 目录
 
 set -eu
 
@@ -21,6 +21,7 @@ SKILL_NAME="rtl-verify"
 LEGACY_SKILL_NAME="rtl-verification-copilot"
 CANONICAL_DIR="$HOME/.agents/skills/$SKILL_NAME"
 LEGACY_CANONICAL_DIR="$HOME/.agents/skills/$LEGACY_SKILL_NAME"
+ACTIVE_SKILLS_DIR="$CANONICAL_DIR/skills"
 
 # ---------------------------------------------------------------------------
 # 终端颜色输出
@@ -40,34 +41,21 @@ success() { printf "${GREEN}[OK]${NC}    %s\n" "$1"; }
 warn()    { printf "${YELLOW}[WARN]${NC}  %s\n" "$1"; }
 
 choose_skill_variant() {
-    lang="${RTL_VERIFY_LANG:-}"
-    if [ -z "$lang" ]; then
-        printf "\n请选择安装版本 / Select skill language:\n"
-        printf "  1) 中文（默认）\n"
-        printf "  2) English\n"
-        printf "输入 1 或 2 后回车 [1]: "
-        if [ -r /dev/tty ]; then
-            read answer < /dev/tty || answer=""
-        else
-            answer=""
-        fi
-        case "$answer" in
-            2|en|EN|english|English) lang="en" ;;
-            *) lang="cn" ;;
-        esac
+    printf "\n请选择安装版本 / Select skill language:\n"
+    printf "  1) 中文（默认）\n"
+    printf "  2) English\n"
+    printf "输入 1 或 2 后回车 [1]: "
+    answer=""
+    if [ -e /dev/tty ]; then
+        answer="$({ IFS= read -r line < /dev/tty && printf "%s" "$line"; } 2>/dev/null || true)"
     fi
 
-    case "$lang" in
-        cn|CN|zh|ZH|chinese|Chinese|中文)
-            SKILL_VARIANT="cn"
-            SKILL_SOURCE_DIR="$CANONICAL_DIR/skills_cn"
-            ;;
-        en|EN|english|English)
+    case "$answer" in
+        2|en|EN|english|English)
             SKILL_VARIANT="en"
             SKILL_SOURCE_DIR="$CANONICAL_DIR/skills_en"
             ;;
         *)
-            warn "未知语言选项 '$lang'，使用中文版本。"
             SKILL_VARIANT="cn"
             SKILL_SOURCE_DIR="$CANONICAL_DIR/skills_cn"
             ;;
@@ -174,15 +162,21 @@ main() {
         warn "未找到所选版本的 SKILL.md: $SKILL_SOURCE_DIR"
         exit 1
     fi
-    info "当前安装版本: $SKILL_VARIANT ($SKILL_SOURCE_DIR)"
+    info "当前安装版本: $SKILL_VARIANT"
 
-    # 2. 清理旧版非标准入口，避免 Codex 同时显示 marketplace 与 SKILL.md 两个入口
+    # 2. 将所选语言版本复制到统一入口 skills/
+    info "正在生成统一 Skill 入口: $ACTIVE_SKILLS_DIR"
+    rm -rf "$ACTIVE_SKILLS_DIR"
+    mkdir -p "$ACTIVE_SKILLS_DIR"
+    cp -R "$SKILL_SOURCE_DIR/." "$ACTIVE_SKILLS_DIR/"
+
+    # 3. 清理旧版非标准入口，避免 Codex 同时显示 marketplace 与 SKILL.md 两个入口
     info "正在清理旧版 Agent 插件元数据..."
-    rm -f "$CANONICAL_DIR/skills_cn/marketplace.json" "$CANONICAL_DIR/skills_en/marketplace.json"
+    rm -f "$CANONICAL_DIR/skills_cn/marketplace.json" "$CANONICAL_DIR/skills_en/marketplace.json" "$ACTIVE_SKILLS_DIR/marketplace.json"
     success "Skill 核心文件部署成功。"
 
     # =======================================================================
-    # 3. [核心新增功能] 为 Claude Code 注册系统级斜杠命令
+    # 4. [核心新增功能] 为 Claude Code 注册系统级斜杠命令
     # =======================================================================
     if [ -d "$HOME/.claude" ]; then
         info "正在为 Claude Code 生成 /rtl-verify 快捷指令..."
@@ -192,7 +186,7 @@ main() {
 description: 启动 RTL Verification Orchestrator 全自动验证飞轮
 ---
 
-请先读取并严格遵循 \`~/.agents/skills/rtl-verify/skills_${SKILL_VARIANT}/SKILL.md\` 中的统筹引擎守则。
+请先读取并严格遵循 \`~/.agents/skills/rtl-verify/skills/SKILL.md\` 中的统筹引擎守则。
 
 然后，接管当前目录下的代码 \$ARGUMENTS，启动全自动 RTL 验证飞轮。
 开始前，请先帮我梳理当前工程的顶层模块结构，并向我强制确认设计意图。
@@ -201,11 +195,11 @@ EOF
     fi
     # =======================================================================
 
-    # 4. 自动软链接分发
+    # 5. 自动软链接分发
     platforms="$(detect_global_platforms)"
     installed=""
     count=0
-    TARGET_SKILLS_DIR="$SKILL_SOURCE_DIR"
+    TARGET_SKILLS_DIR="$ACTIVE_SKILLS_DIR"
 
     for platform in $platforms; do
         dest="$(platform_path "$platform")"

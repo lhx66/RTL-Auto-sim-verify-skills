@@ -27,11 +27,12 @@ Workflow characteristics:
 
 ## Project Architecture
 
-The project keeps two installable skill variants:
+The project keeps two source variants. During installation, the selected variant is copied into the unified `skills/` directory.
 
 ```text
 README.md
 install_skills.sh
+skills/                            # Generated during installation; active skill entry
 skills_cn/                         # Chinese skill variant
   SKILL.md
   Skill_1_RTL_Analyzer.md
@@ -75,12 +76,7 @@ Run the installer from any terminal. On Windows, Git Bash is recommended.
 curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | sh
 ```
 
-The installer asks which language variant to install. Chinese is the default. For non-interactive installation:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=cn sh
-curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=en sh
-```
+The installer asks which language variant to install. Chinese is the default. The selected variant is copied into `skills/` and distributed to detected AI environments.
 
 The installer distributes the skill to detected AI environments:
 
@@ -136,11 +132,12 @@ claude
 
 ## 项目架构
 
-项目保留两个可安装版本：
+项目保留两个源版本。安装时，脚本会把用户选择的版本复制到统一的 `skills/` 目录。
 
 ```text
 README.md
 install_skills.sh
+skills/                            # 安装时生成，作为实际 skill 入口
 skills_cn/                         # 中文 skill
   SKILL.md
   Skill_1_RTL_Analyzer.md
@@ -184,12 +181,7 @@ skills_en/                         # 英文 skill
 curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | sh
 ```
 
-安装脚本会询问安装中文还是英文版本，默认中文。非交互安装可使用：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=cn sh
-curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=en sh
-```
+安装脚本会询问安装中文还是英文版本，默认中文。选中的版本会被复制到 `skills/`，再分发到检测到的 AI 环境。
 
 安装脚本会自动分发到检测到的 AI 环境：
 
