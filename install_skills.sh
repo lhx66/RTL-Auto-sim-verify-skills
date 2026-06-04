@@ -9,6 +9,7 @@
 #   1. 将远程仓库克隆/更新至全局统一存放路径 ~/.agents/skills/rtl-verify
 #   2. 自动建立软链接分发到各全局 AI 平台（Claude Code, Codex, Cursor 等）
 #   3. 自动在 Claude Code 中注册原生的 /rtl-verify 斜杠命令
+#   4. 安装时可选择中文或英文 skill 版本
 
 set -eu
 
@@ -37,6 +38,41 @@ fi
 info()    { printf "${BLUE}[INFO]${NC}  %s\n" "$1"; }
 success() { printf "${GREEN}[OK]${NC}    %s\n" "$1"; }
 warn()    { printf "${YELLOW}[WARN]${NC}  %s\n" "$1"; }
+
+choose_skill_variant() {
+    lang="${RTL_VERIFY_LANG:-}"
+    if [ -z "$lang" ]; then
+        printf "\n请选择安装版本 / Select skill language:\n"
+        printf "  1) 中文（默认）\n"
+        printf "  2) English\n"
+        printf "输入 1 或 2 后回车 [1]: "
+        if [ -r /dev/tty ]; then
+            read answer < /dev/tty || answer=""
+        else
+            answer=""
+        fi
+        case "$answer" in
+            2|en|EN|english|English) lang="en" ;;
+            *) lang="cn" ;;
+        esac
+    fi
+
+    case "$lang" in
+        cn|CN|zh|ZH|chinese|Chinese|中文)
+            SKILL_VARIANT="cn"
+            SKILL_SOURCE_DIR="$CANONICAL_DIR/skills_cn"
+            ;;
+        en|EN|english|English)
+            SKILL_VARIANT="en"
+            SKILL_SOURCE_DIR="$CANONICAL_DIR/skills_en"
+            ;;
+        *)
+            warn "未知语言选项 '$lang'，使用中文版本。"
+            SKILL_VARIANT="cn"
+            SKILL_SOURCE_DIR="$CANONICAL_DIR/skills_cn"
+            ;;
+    esac
+}
 
 # ---------------------------------------------------------------------------
 # 全局平台自动检测
@@ -133,9 +169,16 @@ main() {
         rm -rf "$LEGACY_CANONICAL_DIR"
     fi
 
+    choose_skill_variant
+    if [ ! -f "$SKILL_SOURCE_DIR/SKILL.md" ]; then
+        warn "未找到所选版本的 SKILL.md: $SKILL_SOURCE_DIR"
+        exit 1
+    fi
+    info "当前安装版本: $SKILL_VARIANT ($SKILL_SOURCE_DIR)"
+
     # 2. 清理旧版非标准入口，避免 Codex 同时显示 marketplace 与 SKILL.md 两个入口
     info "正在清理旧版 Agent 插件元数据..."
-    rm -f "$CANONICAL_DIR/skills/marketplace.json"
+    rm -f "$CANONICAL_DIR/skills_cn/marketplace.json" "$CANONICAL_DIR/skills_en/marketplace.json"
     success "Skill 核心文件部署成功。"
 
     # =======================================================================
@@ -149,7 +192,7 @@ main() {
 description: 启动 RTL Verification Orchestrator 全自动验证飞轮
 ---
 
-请先读取并严格遵循 \`~/.agents/skills/rtl-verify/skills/SKILL.md\` 中的统筹引擎守则。
+请先读取并严格遵循 \`~/.agents/skills/rtl-verify/skills_${SKILL_VARIANT}/SKILL.md\` 中的统筹引擎守则。
 
 然后，接管当前目录下的代码 \$ARGUMENTS，启动全自动 RTL 验证飞轮。
 开始前，请先帮我梳理当前工程的顶层模块结构，并向我强制确认设计意图。
@@ -162,7 +205,7 @@ EOF
     platforms="$(detect_global_platforms)"
     installed=""
     count=0
-    TARGET_SKILLS_DIR="$CANONICAL_DIR/skills"
+    TARGET_SKILLS_DIR="$SKILL_SOURCE_DIR"
 
     for platform in $platforms; do
         dest="$(platform_path "$platform")"

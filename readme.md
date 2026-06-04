@@ -27,17 +27,23 @@ Workflow characteristics:
 
 ## Project Architecture
 
-The project uses a multi-phase skill pipeline. The core behavior is defined by Markdown skill files under the `skills/` directory:
+The project keeps two installable skill variants:
 
 ```text
 README.md
 install_skills.sh
-skills/
-  SKILL.md                         # Main orchestrator for the full verification loop
-  Skill_1_RTL_Analyzer.md          # Phase 1: architecture analysis, intent alignment, and self-checking testbench generation
-  Skill_2_Simulation_Controller.md # Phase 2: ModelSim script generation, silent execution, and log analysis
-  Skill_3_RTL_Refactor.md          # Phase 3: defect tracing, focused RTL/testbench edits, and regression triggering
-  agents/openai.yaml               # Codex UI metadata
+skills_cn/                         # Chinese skill variant
+  SKILL.md
+  Skill_1_RTL_Analyzer.md
+  Skill_2_Simulation_Controller.md
+  Skill_3_RTL_Refactor.md
+  agents/openai.yaml
+skills_en/                         # English skill variant
+  SKILL.md
+  Skill_1_RTL_Analyzer.md
+  Skill_2_Simulation_Controller.md
+  Skill_3_RTL_Refactor.md
+  agents/openai.yaml
 ```
 
 ### 1. Main Orchestrator (`SKILL.md`)
@@ -67,6 +73,13 @@ Run the installer from any terminal. On Windows, Git Bash is recommended.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | sh
+```
+
+The installer asks which language variant to install. Chinese is the default. For non-interactive installation:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=cn sh
+curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=en sh
 ```
 
 The installer distributes the skill to detected AI environments:
@@ -123,17 +136,23 @@ claude
 
 ## 项目架构
 
-项目采用多阶段流水线架构，核心功能由 `skills/` 文件夹下的 Markdown 技能文档定义：
+项目保留两个可安装版本：
 
 ```text
 README.md
 install_skills.sh
-skills/
-  SKILL.md                         # 中央大脑：统筹全局验证闭环与身份切换
-  Skill_1_RTL_Analyzer.md          # Phase 1：架构分析、意图对齐与强自检型 TB 自动构建
-  Skill_2_Simulation_Controller.md # Phase 2：仿真环境搭建、静默运行与日志精读
-  Skill_3_RTL_Refactor.md          # Phase 3：缺陷溯源、代码/TB 精准修复、回归测试触发
-  agents/openai.yaml               # Codex 界面元数据
+skills_cn/                         # 中文 skill
+  SKILL.md
+  Skill_1_RTL_Analyzer.md
+  Skill_2_Simulation_Controller.md
+  Skill_3_RTL_Refactor.md
+  agents/openai.yaml
+skills_en/                         # 英文 skill
+  SKILL.md
+  Skill_1_RTL_Analyzer.md
+  Skill_2_Simulation_Controller.md
+  Skill_3_RTL_Refactor.md
+  agents/openai.yaml
 ```
 
 ### 1. 中央统筹大脑 (`SKILL.md`)
@@ -163,6 +182,13 @@ skills/
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | sh
+```
+
+安装脚本会询问安装中文还是英文版本，默认中文。非交互安装可使用：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=cn sh
+curl -fsSL https://raw.githubusercontent.com/lhx66/RTL-Auto-sim-verify-skills/main/install_skills.sh | RTL_VERIFY_LANG=en sh
 ```
 
 安装脚本会自动分发到检测到的 AI 环境：

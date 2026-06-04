@@ -1,0 +1,7 @@
+interface:
+  display_name: "RTL Verify"
+  short_description: "ModelSim RTL verification and repair workflow"
+  default_prompt: "Use $rtl-verify to verify my Verilog/SystemVerilog RTL with ModelSim and iterate from simulation logs."
+
+policy:
+  allow_implicit_invocation: true
