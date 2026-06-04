@@ -33,20 +33,7 @@ TB 问题：指出错误的激励、预期延迟、checker 或 assertion 条件�
 
 直接修改相关 `.v`、`.sv` 或 Testbench 文件，保留无关代码。
 
-必要时用简短 diff 说明，比如：
-
-```verilog
-// before
-always @(posedge clk) begin
-    if (en) count <= count + 1;
-end
-
-// after: add reset
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) count <= 0;
-    else if (en) count <= count + 1;
-end
-```
+**必要时提供简短代码变动说明。**
 
 ### 4. 回归
 
