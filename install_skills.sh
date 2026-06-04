@@ -19,6 +19,7 @@ set -eu
 REPO_URL="${RTL_VERIFY_REPO_URL:-https://github.com/lhx66/RTL-Auto-sim-verify-skills.git}"
 SKILL_NAME="rtl-verify"
 LEGACY_SKILL_NAME="rtl-verification-copilot"
+LEGACY_COMMAND_NAMES="rtl-verification-copilot rtl-copilot"
 CANONICAL_DIR="$HOME/.agents/skills/$SKILL_NAME"
 LEGACY_CANONICAL_DIR="$HOME/.agents/skills/$LEGACY_SKILL_NAME"
 ACTIVE_SKILLS_DIR="$CANONICAL_DIR/skills"
@@ -181,6 +182,13 @@ main() {
     if [ -d "$HOME/.claude" ]; then
         info "正在为 Claude Code 生成 /rtl-verify 快捷指令..."
         mkdir -p "$HOME/.claude/commands"
+        for old_command in $LEGACY_COMMAND_NAMES; do
+            old_command_path="$HOME/.claude/commands/$old_command.md"
+            if [ -e "$old_command_path" ]; then
+                rm -f "$old_command_path"
+                success "已清理旧版斜杠命令: /$old_command"
+            fi
+        done
         cat > "$HOME/.claude/commands/rtl-verify.md" << EOF
 ---
 description: 启动 RTL Verification Orchestrator 全自动验证飞轮
